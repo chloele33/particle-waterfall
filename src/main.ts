@@ -7,6 +7,9 @@ import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import {Particle, ParticleCollection} from "./Particle";
+
+'./Particle';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -14,6 +17,7 @@ const controls = {
 };
 
 let square: Square;
+let particles: ParticleCollection;
 let screenQuad: ScreenQuad;
 let time: number = 0.0;
 
@@ -22,6 +26,11 @@ function loadScene() {
   square.create();
   screenQuad = new ScreenQuad();
   screenQuad.create();
+
+  //set up particles
+  particles = new ParticleCollection(100);
+  particles.create();
+  particles.setVBOs();
 
   // Set up instanced rendering data arrays here.
   // This example creates a set of positional
@@ -90,6 +99,8 @@ function main() {
     new Shader(gl.VERTEX_SHADER, require('./shaders/flat-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
+
+  // SET UP TRANSFORM FEEDBACK FOR PARTICLES
 
   // This function will be called every frame
   function tick() {
