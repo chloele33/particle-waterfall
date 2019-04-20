@@ -130,16 +130,21 @@ class ParticleCollection{
     }
 
 
+    getVAO(i: number): WebGLVertexArrayObject{
+        return this.particleVAOs[i];
+    }
 
-
-    getOffsets(): Float32Array {
-        return this.offsetsArray;
+    getTransformFeedbacks(i: number): WebGLTransformFeedback{
+        return this.particleTransformFeedbacks[i];
     }
 
     getColors(): Float32Array {
         return this.colorsArray;
     }
 
+    getVBO(i: number): WebGLBuffer[]{
+        return this.particleVBOs[i];
+    }
 }
 
 export {Particle, ParticleCollection};

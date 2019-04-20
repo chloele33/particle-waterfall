@@ -1,4 +1,4 @@
-import {vec3} from 'gl-matrix';
+import {vec3, vec4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Square from './geometry/Square';
@@ -100,20 +100,45 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/flat-frag.glsl')),
   ]);
 
+  var particleShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/particle-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/particle-frag.glsl')),
+  ]);
+
   // SET UP TRANSFORM FEEDBACK FOR PARTICLES
+  let varyings = ["v_pos", "v_vel", "v_col", "v_time"];
+  const transformFeedbackShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/particle-vert-tf.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/particle-frag-tf.glsl')),
+    ], true, varyings
+  );
+  transformFeedbackShader.setColor(vec4.fromValues(0.0, 1.0, 1.0, 1.0));
+  transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, -1.0, 0.0));
 
   // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();
     instancedShader.setTime(time);
+    transformFeedbackShader.setTime(time);
+    particleShader.setTime(time);
     flat.setTime(time++);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
+
+    // transform feedback
+    renderer.transform(camera, transformFeedbackShader, [
+      particles
+    ]);
+
     renderer.clear();
     //renderer.render(camera, flat, [screenQuad]);
-    renderer.render(camera, instancedShader, [
-      square,
-    ]);
+    // renderer.render(camera, instancedShader, [
+    //   square,
+    // ]);
+
+    renderer.renderParticleCollection(camera, particleShader, square, [particles]);
+
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame

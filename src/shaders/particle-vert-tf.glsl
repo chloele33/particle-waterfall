@@ -5,8 +5,11 @@
 #define COLOR_LOCATION 4
 #define TIME_LOCATION 5
 
+
 uniform mat4 u_ViewProj;
 uniform float u_Time;
+uniform vec3  u_Acceleration;
+
 
 uniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)
 // gl_Position = center + vs_Pos.x * camRight + vs_Pos.y * camUp;
@@ -19,6 +22,11 @@ in vec2 vs_UV; // Non-instanced, and presently unused in main(). Feel free to us
 
 out vec4 fs_Col;
 out vec4 fs_Pos;
+
+out vec3 v_pos;
+out vec3 v_vel;
+out vec3 v_col;
+out vec2 v_time;
 
 void main()
 {
