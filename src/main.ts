@@ -137,7 +137,14 @@ function main() {
   setParticleSize();
 
 
-      // This function will be called every frame
+  function setParticleAcceleration() {
+    transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, 20.0,0.0));
+  }
+  setParticleAcceleration();
+
+
+
+  // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();

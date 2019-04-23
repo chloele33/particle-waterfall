@@ -60,6 +60,7 @@ vec3 getParticlePos(float spaceSize){
     return position;
 }
 
+const float MAX_SPEED = 10.0;
 
 void main()
 {
@@ -74,40 +75,62 @@ void main()
 //    gl_Position = u_ViewProj * vec4(billboardPos, 1.0);
 //    v_col = u_ParticleColor;
 
-        float spaceSize = 50.0;
+        float spaceSize = 80.0;
         float distToCenter = length(a_position);
+        vec3 nextVel = vec3(0.0);
+        vec3 nextPos = vec3(0.0);
         // a new particle
-        if(a_time.x == 0.0 || distToCenter > spaceSize){
+        if(a_time.x == 0.0){
             v_pos = getParticlePos(spaceSize);
 
             v_vel = vec3(random1(vec2(a_ID, 0.0), vec2(0.0, 0.0)) - 0.5, random1(vec2(a_ID, a_ID), vec2(0.0, 0.0)) - 0.5, random1(vec2(2.0 * a_ID, 2.0 * a_ID), vec2(0.0, 0.0)) - 0.5);
             v_vel = normalize(v_vel);
 
+
             v_col = u_ParticleColor;
 
             v_time.x = u_Time;
-            v_time.y = 3000.0;
+            v_time.y = 1000.0;
         }
         else{
-            // update positin
+            // update position
             float rotationSpeed = 0.1;
             float deltaTime = 0.01;
+            // update velocity
 
-            vec3 vel = vec3(0.0, 0.0, 0.0);
+            //vec3 vel = vec3(0.0, 0.0, 0.0);
+            vec3 vel = a_velocity;
+            vel  = vel  + deltaTime * 30.0 * u_Acceleration;
 
-            vel = a_velocity;
 
             // tangent direction rotating velcoity
             vec3 tmp = normalize(a_position);
             tmp = cross(vec3(0, 1, 0), tmp);
             vel += vel + 0.7 * tmp;
 
-            v_pos = a_position + deltaTime * rotationSpeed * vel;
+            v_pos = a_position - deltaTime * rotationSpeed * vel;
 
+            // bring back to top if out of view and reset
+            if (v_pos.y < -spaceSize/2.0 ) {
+                nextVel.x = 0.1 * MAX_SPEED * (2.0 * random1(100.0 * v_pos, vec3(0.0)) - 1.0);
+                nextVel.y = random1(v_pos + vel, vec3(0.0));
+                nextVel *= min(1.0, MAX_SPEED / length(nextVel));
 
-            v_vel = a_velocity;
+                 nextPos.x = (random1(v_pos + vel, vec3(0.0)) - 0.5) * spaceSize;
+                 nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 64.0 - spaceSize);
 
-            v_col = u_ParticleColor;
+                v_pos.y = spaceSize/2.0;
+//                v_vel = vec3(random1(vec2(a_ID, 0.0), vec2(0.0, 0.0)) - 0.5, random1(vec2(a_ID, a_ID), vec2(0.0, 0.0)) - 0.5, random1(vec2(2.0 * a_ID, 2.0 * a_ID), vec2(0.0, 0.0)) - 0.5);
+//                v_vel = normalize(v_vel);
+                v_vel = nextVel;
+                v_col = u_ParticleColor;
+                v_time.x = u_Time;
+                v_time.y = 1000.0;
+            } else {
+                v_vel = a_velocity + deltaTime * u_Acceleration;
+                v_col = u_ParticleColor + (1.0 / pow((-(v_pos.y) + spaceSize / 2.0) / 10.0, 5.0));
+
+            }
 
 
             v_time = a_time;
