@@ -39,6 +39,9 @@ class ShaderProgram {
 
   unifAcceleration: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
+  unifParticleCol: WebGLUniformLocation;
+  unifParticleSize: WebGLUniformLocation;
+
 
 
 
@@ -73,6 +76,8 @@ class ShaderProgram {
 
     this.unifAcceleration = gl.getUniformLocation(this.prog, 'u_Acceleration');
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifParticleCol = gl.getUniformLocation(this.prog, "u_ParticleColor");
+    this.unifParticleSize = gl.getUniformLocation(this.prog, "u_ParticleSize");
   }
 
   use() {
@@ -137,6 +142,7 @@ class ShaderProgram {
     }
   }
 
+
   // Transform Feedback
   setTransformAcc(accel: vec3) {
     this.use();
@@ -146,10 +152,24 @@ class ShaderProgram {
     }
   }
 
+  setParticleColor(color1: vec3){
+    this.use();
+    if(this.unifParticleCol !== -1){
+      gl.uniform3fv(this.unifParticleCol, color1);
+    }
+  }
+
   setColor(color: vec4) {
     this.use();
     if (this.unifColor !== -1) {
       gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setParticleSize(particleSize: number){
+    this.use();
+    if(this.unifParticleSize !== -1){
+      gl.uniform1f(this.unifParticleSize, particleSize);
     }
   }
 

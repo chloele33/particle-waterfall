@@ -34,6 +34,7 @@ const POSITION_LOCATION = 2;
 const VELOCITY_LOCATION = 3;
 const COLOR_LOCATION = 4;
 const TIME_LOCATION = 5;
+const ID_LOCATION = 6;
 
 const NUM_LOCATIONS = 7;
 
@@ -42,6 +43,8 @@ class ParticleCollection{
     velocityArray: Float32Array;
     positionArray: Float32Array;
     timeArray: Float32Array;
+    particleIDs: Float32Array;
+
 
     colorsArray: Float32Array;
     offsetsArray: Float32Array;
@@ -59,6 +62,7 @@ class ParticleCollection{
         this.positionArray = new Float32Array(this.numParticles * 3);
         this.colorsArray = new Float32Array(this.numParticles * 3);
         this.timeArray = new Float32Array(this.numParticles * 2);
+        this.particleIDs  = new Float32Array(this.numParticles);
 
         this.particleVAOs = [gl.createVertexArray(), gl.createVertexArray()];
         this.particleTransformFeedbacks = [gl.createTransformFeedback(), gl.createTransformFeedback()];
@@ -82,6 +86,8 @@ class ParticleCollection{
 
             this.timeArray[i * 2] = 0.0;
             this.timeArray[i * 2 + 1] = 0.0;
+
+            this.particleIDs[i] = i;
         }
     }
 
@@ -116,6 +122,12 @@ class ParticleCollection{
             gl.bufferData(gl.ARRAY_BUFFER, this.timeArray, gl.STREAM_COPY);
             gl.vertexAttribPointer(TIME_LOCATION, 2, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(TIME_LOCATION);
+
+            this.particleVBOs[i][ID_LOCATION] = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.particleVBOs[i][ID_LOCATION]);
+            gl.bufferData(gl.ARRAY_BUFFER, this.particleIDs, gl.STATIC_READ);
+            gl.vertexAttribPointer(ID_LOCATION, 1, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(ID_LOCATION);
 
 
             gl.bindBuffer(gl.ARRAY_BUFFER, null);

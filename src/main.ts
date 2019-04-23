@@ -14,6 +14,10 @@ import {Particle, ParticleCollection} from "./Particle";
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
+  'R': 0,
+  'G': 72,
+  'B':255.0,
+  'Particle Size': 0.5
 };
 
 let square: Square;
@@ -28,7 +32,7 @@ function loadScene() {
   screenQuad.create();
 
   //set up particles
-  particles = new ParticleCollection(100);
+  particles = new ParticleCollection(10000);
   particles.create();
   particles.setVBOs();
 
@@ -69,6 +73,10 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'R', 0, 255.0).step(1.0).onChange(setParticleColor);
+  gui.add(controls, 'G', 0, 255.0).step(1.0).onChange(setParticleColor);
+  gui.add(controls, 'B', 0, 255.0).step(1.0).onChange(setParticleColor);
+  gui.add(controls, 'Particle Size', 0.1, 1.0).step(0.1).onChange(setParticleSize);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -83,7 +91,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(50, 50, 10), vec3.fromValues(50, 50, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, 0), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -105,7 +113,8 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/particle-frag.glsl')),
   ]);
 
-  // SET UP TRANSFORM FEEDBACK FOR PARTICLES
+
+      // SET UP TRANSFORM FEEDBACK FOR PARTICLES
   let varyings = ["v_pos", "v_vel", "v_col", "v_time"];
   const transformFeedbackShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/particle-vert-tf.glsl')),
@@ -114,14 +123,27 @@ function main() {
   );
   transformFeedbackShader.setColor(vec4.fromValues(0.0, 1.0, 1.0, 1.0));
   transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, -1.0, 0.0));
+  function setParticleColor() {
+    transformFeedbackShader.setParticleColor(vec3.fromValues(
+        controls.R / 255.0,
+        controls.G / 255.0,
+        controls.B / 255.0));
+  }
+  setParticleColor();
 
-  // This function will be called every frame
+  function setParticleSize() {
+    particleShader.setParticleSize( controls["Particle Size"]);
+  }
+  setParticleSize();
+
+
+      // This function will be called every frame
   function tick() {
     camera.update();
     stats.begin();
-    instancedShader.setTime(time);
-    transformFeedbackShader.setTime(time);
-    particleShader.setTime(time);
+    instancedShader.setTime(time++);
+    transformFeedbackShader.setTime(time++);
+    particleShader.setTime(time++);
     flat.setTime(time++);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 
@@ -150,12 +172,14 @@ function main() {
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
     flat.setDimensions(window.innerWidth, window.innerHeight);
+    transformFeedbackShader.setDimensions(window.innerWidth, window.innerHeight);
   }, false);
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
   flat.setDimensions(window.innerWidth, window.innerHeight);
+  transformFeedbackShader.setDimensions(window.innerWidth, window.innerHeight);
 
   // Start the render loop
   tick();
