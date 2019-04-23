@@ -15,16 +15,20 @@ class Camera {
   up: vec3 = vec3.create();
   right: vec3 = vec3.create();
   forward: vec3 = vec3.create();
+  rotRadius: number;
+
 
   constructor(position: vec3, target: vec3) {
     const canvas = <HTMLCanvasElement> document.getElementById('canvas');
 
     this.controls = CameraControls(canvas, {
-      position: position,
+      eye: position,
       center: target,
     });
 
+
     vec3.add(this.target, this.position, this.direction);
+    this.up = vec3.fromValues(0, 1, 0);
     mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
 
     this.position = this.controls.eye;
@@ -33,6 +37,7 @@ class Camera {
     vec3.normalize(this.forward, this.forward);
     vec3.cross(this.right, this.forward, this.up);
     vec3.normalize(this.right, this.right);
+
   }
 
   setAspectRatio(aspectRatio: number) {
@@ -45,6 +50,9 @@ class Camera {
 
   update() {
     this.controls.tick();
+
+   this.position = vec3.fromValues(this.controls.eye[0], this.controls.eye[1], this.controls.eye[2]);
+
 
     vec3.add(this.target, this.position, this.direction);
     this.position = vec3.fromValues(this.controls.eye[0], this.controls.eye[1], this.controls.eye[2]);

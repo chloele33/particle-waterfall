@@ -53,9 +53,9 @@ vec2 random2( vec2 p , vec2 seed) {
 
 // randomly distributed in a cube
 vec3 getParticlePos(float spaceSize){
-    vec3 position = vec3(random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize - spaceSize/2.0,
+    vec3 position = vec3(random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize * 2.0 - spaceSize,
                     random1(vec2(a_ID, 2.5 * a_ID), vec2(0.0, 0.0)) * spaceSize - spaceSize/2.0,
-                    random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize - spaceSize/2.0);
+                    random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize /2.0 - spaceSize/4.0);
 
     return position;
 }
@@ -128,7 +128,7 @@ void main()
                 v_time.y = 1000.0;
             } else {
                 v_vel = a_velocity + deltaTime * u_Acceleration;
-                v_col = u_ParticleColor + (1.0 / pow((-(v_pos.y) + spaceSize / 2.0) / 10.0, 5.0));
+                v_col = u_ParticleColor + (1.0 / pow((-(v_pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
 
             }
 

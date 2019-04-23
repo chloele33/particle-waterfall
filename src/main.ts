@@ -32,7 +32,7 @@ function loadScene() {
   screenQuad.create();
 
   //set up particles
-  particles = new ParticleCollection(10000);
+  particles = new ParticleCollection(15000);
   particles.create();
   particles.setVBOs();
 
@@ -91,7 +91,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 0, 0), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(0, 5, -90.0), vec3.fromValues(0.0, -10, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -138,7 +138,7 @@ function main() {
 
 
   function setParticleAcceleration() {
-    transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, 20.0,0.0));
+    transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, 30.0,0.0));
   }
   setParticleAcceleration();
 
