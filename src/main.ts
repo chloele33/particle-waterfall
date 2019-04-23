@@ -8,6 +8,10 @@ import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import {Particle, ParticleCollection} from "./Particle";
+import {readTextFile} from './globals';
+import Mesh from './geometry/Mesh'
+
+
 
 './Particle';
 
@@ -30,6 +34,10 @@ function loadScene() {
   square.create();
   screenQuad = new ScreenQuad();
   screenQuad.create();
+
+  let obsData = readTextFile("https://raw.githubusercontent.com/chloele33/lsystem-tree/master/src/obj/mud.obj");
+  let mudMesh = new Mesh(obsData, vec3.fromValues(0,0,0));
+  mudMesh.create();
 
   //set up particles
   particles = new ParticleCollection(15000);
@@ -181,6 +189,8 @@ function main() {
     flat.setDimensions(window.innerWidth, window.innerHeight);
     transformFeedbackShader.setDimensions(window.innerWidth, window.innerHeight);
   }, false);
+
+
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);

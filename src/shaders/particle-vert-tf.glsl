@@ -129,7 +129,6 @@ void main()
             } else {
                 v_vel = a_velocity + deltaTime * u_Acceleration;
                 v_col = u_ParticleColor + (1.0 / pow((-(v_pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
-
             }
 
 
