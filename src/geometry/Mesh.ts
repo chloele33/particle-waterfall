@@ -64,10 +64,12 @@ class Mesh extends Drawable {
     this.generateUV();
     this.generateCol();
 
-    this.generateTransformCol1();
-    this.generateTransformCol2();
-    this.generateTransformCol3();
-    this.generateTransformCol4();
+    this.generateTranslate();
+
+    // this.generateTransformCol1();
+    // this.generateTransformCol2();
+    // this.generateTransformCol3();
+    // this.generateTransformCol4();
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);

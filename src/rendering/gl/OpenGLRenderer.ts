@@ -87,7 +87,7 @@ class OpenGLRenderer {
     }
   }
 
-  transform(camera: Camera, prog: ShaderProgram, particleCollection: Array<ParticleCollection>){
+  transformParticles(camera: Camera, prog: ShaderProgram, particleCollection: Array<ParticleCollection>){
     if(particleCollection.length !== 0){
       let viewProj = mat4.create();
       let model = mat4.create();

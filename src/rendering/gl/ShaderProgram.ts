@@ -1,6 +1,8 @@
-import {vec3, vec4, mat4, mat3} from 'gl-matrix';
+import {vec3, vec4, mat4, mat3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import {gl} from '../../globals';
+import Camera from '../../Camera';
+
 
 var activeProgram: WebGLProgram = null;
 
@@ -49,6 +51,13 @@ class ShaderProgram {
   unifParticleCol: WebGLUniformLocation;
   unifParticleSize: WebGLUniformLocation;
 
+  unifSampler2D: WebGLUniformLocation;
+  unifIsAttractToPoint: WebGLUniformLocation;
+  unifAttractPos: WebGLUniformLocation;
+
+  unifObstacleBuf: WebGLUniformLocation;
+
+
 
 
 
@@ -91,6 +100,12 @@ class ShaderProgram {
     this.attrTransformCol2 = gl.getAttribLocation(this.prog, "vs_Transform2");
     this.attrTransformCol3 = gl.getAttribLocation(this.prog, "vs_Transform3");
     this.attrTransformCol4 = gl.getAttribLocation(this.prog, "vs_Transform4");
+
+    this.unifIsAttractToPoint = gl.getUniformLocation(this.prog, "u_IsAttract");
+    this.unifAttractPos = gl.getUniformLocation(this.prog, "u_ObstaclePos");
+    this.unifObstacleBuf = gl.getUniformLocation(this.prog, "u_ObstacleBuffer")
+
+
 
   }
 
@@ -185,6 +200,38 @@ class ShaderProgram {
     this.use();
     if(this.unifParticleSize !== -1){
       gl.uniform1f(this.unifParticleSize, particleSize);
+    }
+  }
+
+  setIsAttractToPoint(isAttract: number){
+    this.use();
+    if(this.unifIsAttractToPoint !== -1){
+      gl.uniform1i(this.unifIsAttractToPoint, isAttract);
+    }
+  }
+
+  setObsPos(ndcPos: vec2, cam: Camera){
+    this.use();
+    if(this.unifAttractPos !== -1){
+      let len_vec = vec3.create();
+      vec3.subtract(len_vec, cam.target, cam.position);
+      let len = 1.35 * vec3.length(len_vec);
+
+      let tanFovByTwo = Math.tan(0.5 * cam.fovy * 3.1415926 / 180.0);
+
+      let v = vec3.fromValues(cam.up[0] * len * tanFovByTwo,
+          cam.up[1] * len * tanFovByTwo,
+          cam.up[2] * len * tanFovByTwo);
+
+      let h = vec3.fromValues(cam.right[0] * len * cam.aspectRatio * tanFovByTwo,
+          cam.right[1] * len * cam.aspectRatio * tanFovByTwo,
+          cam.right[2] * len * cam.aspectRatio * tanFovByTwo);
+
+      let world_pos = vec3.fromValues(cam.target[0] + ndcPos[0] * h[0] + ndcPos[1] * v[0],
+          cam.target[1] + ndcPos[0] * h[1] + ndcPos[1] * v[1],
+          cam.target[2] + ndcPos[0] * h[2] + ndcPos[1] * v[2]);
+
+      gl.uniform3fv(this.unifAttractPos, world_pos);
     }
   }
 
@@ -329,6 +376,7 @@ class ShaderProgram {
     if (this.attrTransformCol3 != -1) gl.disableVertexAttribArray(this.attrTransformCol3);
     if (this.attrTransformCol4 != -1) gl.disableVertexAttribArray(this.attrTransformCol4);
 
+    gl.uniform1i(this.unifSampler2D, 0);
   }
 };
 

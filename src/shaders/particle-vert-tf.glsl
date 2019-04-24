@@ -12,6 +12,10 @@ uniform float u_Time;
 uniform vec3  u_Acceleration;
 uniform vec3 u_ParticleColor;
 uniform vec2 u_Dimensions;
+uniform sampler2D u_Texture;
+uniform int   u_IsAttract;
+uniform vec3  u_ObstaclePos;
+
 
 
 uniform mat3 u_CameraAxes; // Used for rendering particles as billboards (quads that are always looking at the camera)
@@ -108,7 +112,18 @@ void main()
             tmp = cross(vec3(0, 1, 0), tmp);
             vel += vel + 0.7 * tmp;
 
+//            if(u_IsAttract != 0){
+//                vec3 dirVec = u_ObstaclePos - a_position;
+//                float dist = length(dirVec);
+//                dirVec = normalize(dirVec);
+//
+//                vel = vel + float(u_IsAttract) * deltaTime * 5000.0 * 1.0 / dist * dirVec;
+//            }
+
+
             v_pos = a_position - deltaTime * rotationSpeed * vel;
+
+
 
             // bring back to top if out of view and reset
             if (v_pos.y < -spaceSize/2.0 ) {
@@ -116,9 +131,13 @@ void main()
                 nextVel.y = random1(v_pos + vel, vec3(0.0));
                 nextVel *= min(1.0, MAX_SPEED / length(nextVel));
 
-                 nextPos.x = (random1(v_pos + vel, vec3(0.0)) - 0.5) * spaceSize;
-                 nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 64.0 - spaceSize);
 
+               //  nextPos.x = (random1(v_pos + vel, vec3(0.0)) - 0.5) * spaceSize;
+                 nextPos.x = random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize * 2.0 - spaceSize;
+                 nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 64.0 - spaceSize);
+                 nextPos.z = random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize/ 2.0 - spaceSize/4.0;
+
+                v_pos = nextPos;
                 v_pos.y = spaceSize/2.0;
 //                v_vel = vec3(random1(vec2(a_ID, 0.0), vec2(0.0, 0.0)) - 0.5, random1(vec2(a_ID, a_ID), vec2(0.0, 0.0)) - 0.5, random1(vec2(2.0 * a_ID, 2.0 * a_ID), vec2(0.0, 0.0)) - 0.5);
 //                v_vel = normalize(v_vel);
@@ -127,9 +146,24 @@ void main()
                 v_time.x = u_Time;
                 v_time.y = 1000.0;
             } else {
-                v_vel = a_velocity + deltaTime * u_Acceleration;
+               if(u_IsAttract != 0){
+//                    vec3 dirVec = u_AttractPos - a_position;
+//                    float dist = length(dirVec);
+//                    dirVec = normalize(dirVec);
+//
+//                    v_vel = a_velocity + float(u_IsAttract) * deltaTime * 5000.0 * 1.0 / dist * dirVec;
+                    float t = length(a_position - u_ObstaclePos);
+                    if (t < 10.0) {
+                         v_vel = -a_velocity;
+;
+                      }
+                }
+                   else {
+                     v_vel = a_velocity + deltaTime * u_Acceleration;
+                }
                 v_col = u_ParticleColor + (1.0 / pow((-(v_pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
             }
+
 
 
             v_time = a_time;
