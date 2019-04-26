@@ -66,7 +66,7 @@ function loadScene() {
 
 
   //set up particles
-  particles = new ParticleCollection(15000);
+  particles = new ParticleCollection(20000);
   particles.create();
   particles.setVBOs();
 
@@ -226,7 +226,6 @@ function main() {
     // ]);
     renderer.clear();
     renderer.render(camera, flat, [cube]);
-    renderer.render(camera, obstacleShader, [screenQuad]);
 
 
     renderer.renderParticleCollection(camera, particleShader, square, [particles]);
@@ -262,7 +261,11 @@ function main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+
+
+  const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
   let _FBO = FBO.create(gl, width, height);
+
 
   addObstacleAddShader.setObsPos(vec2.fromValues(0.0, 0.0), camera);
   _FBO.bind(gl, texture, null);

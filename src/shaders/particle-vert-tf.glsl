@@ -12,7 +12,7 @@ uniform float u_Time;
 uniform vec3  u_Acceleration;
 uniform vec3 u_ParticleColor;
 uniform vec2 u_Dimensions;
-uniform sampler2D u_Texture;
+uniform sampler2D u_ObstacleBuffer;
 uniform int   u_IsAttract;
 uniform vec3  u_ObstaclePos;
 
@@ -64,7 +64,7 @@ vec3 getParticlePos(float spaceSize){
     return position;
 }
 
-const float MAX_SPEED = 10.0;
+const float MAX_SPEED = 30.0;
 
 void main()
 {
@@ -146,18 +146,26 @@ void main()
                 v_time.x = u_Time;
                 v_time.y = 1000.0;
             } else {
-               if(u_IsAttract != 0){
-//                    vec3 dirVec = u_AttractPos - a_position;
-//                    float dist = length(dirVec);
-//                    dirVec = normalize(dirVec);
-//
-//                    v_vel = a_velocity + float(u_IsAttract) * deltaTime * 5000.0 * 1.0 / dist * dirVec;
-                    float t = length(a_position - u_ObstaclePos);
-                    if (t < 10.0) {
-                         v_vel = -a_velocity;
-;
-                      }
+                vec2 uv = vec2(0.5 * (v_pos.x + 1.0), 0.5 * (v_pos.y + 1.0));
+                vec4 texel = texture(u_ObstacleBuffer, uv);
+                vec2 val = 2.0 * texel.rg - 1.0;
+                if (dot(val, val) > 0.1) {
+                    nextVel = reflect(a_velocity, normalize(vec3(val, 0.0)));
+                   nextVel *= min(25.0, MAX_SPEED/length(nextVel));
+                    v_vel = nextVel;
                 }
+//               if(u_IsAttract != 0){
+////                    vec3 dirVec = u_AttractPos - a_position;
+////                    float dist = length(dirVec);
+////                    dirVec = normalize(dirVec);
+////
+////                    v_vel = a_velocity + float(u_IsAttract) * deltaTime * 5000.0 * 1.0 / dist * dirVec;
+//                    float t = length(a_position - u_ObstaclePos);
+//                    if (t < 10.0) {
+//                         v_vel = -a_velocity;
+//;
+//                      }
+//                }
                    else {
                      v_vel = a_velocity + deltaTime * u_Acceleration;
                 }
