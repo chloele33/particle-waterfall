@@ -24,7 +24,9 @@ const controls = {
   'G': 72,
   'B':255.0,
   'Particle Size': 0.5,
-  'Show Obstacles': true
+  'Show Obstacles': true,
+  'Lock Camera': true
+
 };
 
 let square: Square;
@@ -37,6 +39,8 @@ let screenQuad2: ScreenQuad;
 let sphere: Sphere;
 let textureData: Uint8Array;
 let add : boolean = false;
+let lockCam = true;
+let showObstacles = true;
 
 
 
@@ -120,6 +124,7 @@ function main() {
   gui.add(controls, 'B', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'Particle Size', 0.1, 1.0).step(0.1).onChange(setParticleSize);
   gui.add(controls, 'Show Obstacles').onChange(setShowObstacles);
+  gui.add(controls, 'Lock Camera').onChange(setCamera);
 
 
   // get canvas and webgl context
@@ -215,12 +220,19 @@ function main() {
   function setShowObstacles() {
     if(controls["Show Obstacles"] == true) {
       obstacleShader.setShowObstacles(1.0);
+      showObstacles = true;
 
     } else {
       obstacleShader.setShowObstacles(0.0);
+      showObstacles = false;
     }
   }
   setShowObstacles();
+
+  function setCamera() {
+    lockCam = controls["Lock Camera"];
+  }
+  setCamera();
 
 
   function setParticleAcceleration() {
@@ -249,9 +261,21 @@ function main() {
 
   // This function will be called every frame
   function tick() {
-    camera.update();
+    // for (let i = 0; i < obstacles.length; i++) {
+    //   console.log(obstacles.length);
+    //   addObstacle(obstacles[i][0], obstacles[i][1]);
+    // }
+    if (!lockCam ) {
+
+      camera.update();
+
+    } else {
+      camera.reset(vec3.fromValues(0, 5, -90.0), vec3.fromValues(0.0, -10, 0));
+      camera.update();
+
+    }
     stats.begin();
-    instancedShader.setTime(time++);
+  //  instancedShader.setTime(time++);
     transformFeedbackShader.setTime(time++);
     particleShader.setTime(time++);
     flat.setTime(time++);
@@ -266,8 +290,8 @@ function main() {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     //
   //  gl.uniform1i(obstacleShader.unifObstacleBuf, 1);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+  //   gl.activeTexture(gl.TEXTURE1);
+  //   gl.bindTexture(gl.TEXTURE_2D, texture);
 
 
 
@@ -355,8 +379,8 @@ function main() {
   addObstacleAddShader.setDimensions(width, height);
   addObstacleAdd2Shader.setDimensions( width, height);
 
-  addObstacleAdd2Shader.setObstacleSize(160.0);
-  addObstacleAddShader.setObstacleSize(160.0);
+  addObstacleAdd2Shader.setObstacleSize(20.0);
+  addObstacleAddShader.setObstacleSize(20.0);
   gl.enable(gl.BLEND);
 
   function addObstacle(posx:number, posy: number) {
@@ -391,10 +415,7 @@ function main() {
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
-  for (let i = 0; i < obstacles.length; i++) {
-    console.log('hi');
-    addObstacle(obstacles[i][0], obstacles[i][1]);
-  }
+
 
 
   var leftButton = 0;
@@ -402,10 +423,14 @@ function main() {
   var isMouseDragging = false;
 
   canvas.onmousedown = function(ev) {  //Mouse is pressed
-    if(ev.button === rightButton){
+    if(ev.button === rightButton && showObstacles){
       //transformFeedbackShader.setIsAttractToPoint(1.0);
       // add obstacle
       // use obstacleAdd shader to add information
+      //if (isMouseDragging) {
+        addObstacle(ev.clientX / window.innerWidth,
+            ( ev.clientY / window.innerHeight));
+      //}
 
     }
     transformFeedbackShader.setObsPos(vec2.fromValues((2.0 * ev.clientX / window.innerWidth) - 1.0,
@@ -414,31 +439,40 @@ function main() {
     isMouseDragging = true;
   };
 
-
+  for (let i = 0; i < obstacles.length; i++) {
+      console.log(obstacles.length);
+      addObstacle(obstacles[i][0], obstacles[i][1]);
+    }
 
   let posx: number;
   let posy: number;
-  let context = this;
   canvas.onmouseup = function(ev){ //Mouse is released
-    if(ev.button === rightButton) {
-      posx = 0.2
-      posy = 0.2;
+    if(ev.button === rightButton && showObstacles) {
+
       console.log('on mouse right click!');
-      obstacles.push(vec2.fromValues(0.6, 0.6));
-      //addObstacle((2.0 * ev.clientX / window.innerWidth) - 1.0, (2.0 * ev.clientY / window.innerWidth) - 1.0);
-      add = true;
+      obstacles.push(vec2.fromValues(ev.clientX / window.innerWidth,
+          ( ev.clientY / window.innerHeight)));
+      addObstacle(ev.clientX / window.innerWidth,
+          ( ev.clientY / window.innerHeight));
+
+      //addObstacle((2.0 * ev.clientX / window.innerWidth) - 1.0, (1. - 2.0 * ev.clientY / window.innerWidth) - 1.0);
+      //add = true;
 
     }
     isMouseDragging = false;
   }
 
   canvas.onmousemove = function(ev) { //Mouse is moved
-    if(isMouseDragging){
+    if(isMouseDragging && showObstacles){
       console.log('on mouse move!');
+      addObstacle(ev.clientX / window.innerWidth,
+          ( ev.clientY / window.innerHeight));
+
     }
   }
 
   // Start the render loop
+  camera.update();
 
   tick();
 }
