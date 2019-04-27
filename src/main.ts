@@ -23,7 +23,8 @@ const controls = {
   'R': 0,
   'G': 72,
   'B':255.0,
-  'Particle Size': 0.5
+  'Particle Size': 0.5,
+  'Show Obstacles': true
 };
 
 let square: Square;
@@ -35,6 +36,8 @@ let cube: Cube;
 let screenQuad2: ScreenQuad;
 let sphere: Sphere;
 let textureData: Uint8Array;
+let add : boolean = false;
+
 
 
 function loadScene() {
@@ -50,9 +53,9 @@ function loadScene() {
   // sphere = new Sphere(vec3.fromValues(0.0, 0.0, 0.0), 10, 2);
   // sphere.create();
 
-  let obsData = readTextFile("https://raw.githubusercontent.com/chloele33/particle-waterfall/master/src/cylinder.obj");
-  obsMesh = new Mesh(obsData, vec3.fromValues(0,0,0));
-  obsMesh.create();
+  // let obsData = readTextFile("https://raw.githubusercontent.com/chloele33/particle-waterfall/master/src/cylinder.obj");
+  // obsMesh = new Mesh(obsData, vec3.fromValues(0,0,0));
+  // obsMesh.create();
   // let colArray: number[] = [0.484, 0.367, 0.258, 1];
   // let col1Array: number[] = [100, 0, 0, 0];
   // let col2Array: number[] = [0, 100, 0, 0];
@@ -64,12 +67,12 @@ function loadScene() {
   // let col4: Float32Array = new Float32Array(col4Array);
   // let colorsar = new Float32Array(colArray);
   // obsMesh.setInstanceVBOs(col1, col2, col3, col4, colorsar);
-  obsMesh.setNumInstances(1);
+ // obsMesh.setNumInstances(1);
 
 
 
   //set up particles
-  particles = new ParticleCollection(20000);
+  particles = new ParticleCollection(25000);
   particles.create();
   particles.setVBOs();
 
@@ -99,6 +102,10 @@ function loadScene() {
    square.setNumInstances(1); // grid of "particles"
 }
 
+// Add controls to the gui
+const gui = new DAT.GUI();
+
+
 function main() {
   // Initial display for framerate
   const stats = Stats();
@@ -108,12 +115,12 @@ function main() {
   stats.domElement.style.top = '0px';
   document.body.appendChild(stats.domElement);
 
-  // Add controls to the gui
-  const gui = new DAT.GUI();
   gui.add(controls, 'R', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'G', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'B', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'Particle Size', 0.1, 1.0).step(0.1).onChange(setParticleSize);
+  gui.add(controls, 'Show Obstacles').onChange(setShowObstacles);
+
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -136,7 +143,7 @@ function main() {
   gl.canvas.height = canvas.clientHeight;
  // gl.enable(gl.BLEND);
   gl.disable(gl.CULL_FACE);
-  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);
   gl.clearColor(0.2, 0.2, 0.2, 1.0);
   gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
@@ -205,6 +212,16 @@ function main() {
   }
   setParticleSize();
 
+  function setShowObstacles() {
+    if(controls["Show Obstacles"] == true) {
+      obstacleShader.setShowObstacles(1.0);
+
+    } else {
+      obstacleShader.setShowObstacles(0.0);
+    }
+  }
+  setShowObstacles();
+
 
   function setParticleAcceleration() {
     transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, 30.0,0.0));
@@ -241,7 +258,6 @@ function main() {
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 
 
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 // bind
@@ -252,9 +268,6 @@ function main() {
   //  gl.uniform1i(obstacleShader.unifObstacleBuf, 1);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-
-
-
 
 
 
@@ -272,10 +285,10 @@ function main() {
 
     //renderer.render(camera, addObstacleAdd2Shader, [screenQuad]);
     //renderer.render(camera, addObstacleAddShader, [screenQuad2]);
-    gl.enableVertexAttribArray(obstacleShader.attrCorner);
-    gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
-    gl.vertexAttribPointer(obstacleShader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
-        cornersVBO.stride || false, cornersVBO.offset || false);
+    //gl.enableVertexAttribArray(obstacleShader.attrCorner);
+    // gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
+    // gl.vertexAttribPointer(obstacleShader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
+    //     cornersVBO.stride || false, cornersVBO.offset || false);
     gl.disable(gl.BLEND);
 
     renderer.render(camera, obstacleShader, [screenQuad]);
@@ -293,47 +306,12 @@ function main() {
 
     stats.end();
 
+
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
   }
 
 
-
-
-  // // save texture date
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
-  // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  // var texturePixels = new Uint8Array(width * height * 4);
-  // gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texturePixels);
-  // textureData = texturePixels;
-  //
-  // // bind frame buffer
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
-  // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  //
-  // // // bind render buffer
-  // gl.bindRenderbuffer(gl.RENDERBUFFER, tex_renderBuffer);
-  // gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
-  // gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, tex_renderBuffer);
-  // //
-  // gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-  //
-  // // render to frame buffer
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
-  // gl.bindTexture(gl.TEXTURE_2D, texture);
-  // // Render on the whole framebuffer, complete from the lower left corner to the upper right
-  // gl.viewport(0, 0, 2000, 2000);
-  // // clear screen
-  // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  //
-  // renderer.render(camera, obstacleShader, [screenQuad]);
-  //
-  // // save texture date
-  // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
-  // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  // var texturePixels = new Uint8Array(width * height * 4);
-  // gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texturePixels);
-  // textureData = texturePixels;
 
 
   window.addEventListener('resize', function() {
@@ -365,52 +343,12 @@ function main() {
   var height = window.innerHeight;
   width = gl.drawingBufferWidth;
   height = gl.drawingBufferHeight;
-  // var tex_frameBuffer = gl.createFramebuffer();
-  // var tex_renderBuffer = gl.createRenderbuffer();
 
-  // intialize textures
-  // var texture = gl.createTexture(); // texture
-  // let texelData : any  = [];
-  // let value = [127, 127, 0, 0]
-  // for (let i = 0 ; i < width * height ; ++i) {
-  //   texelData.push.apply(texelData, value);
-  // }
-  // //width = 2000;
-  // //height = 2000;
-  // // bind texture
-  // gl.bindTexture(gl.TEXTURE_2D, texture);
-  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA,
-  //     gl.UNSIGNED_BYTE, new Uint8Array(texelData));
-  // // set texture's render settings
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-  //
-  //
-  // var texture2 = gl.createTexture(); //texture static
-  // let texelData2 : any  = [];
-  // let value2 = [127, 127, 0, 0]
-  // for (let i = 0 ; i < width * height ; ++i) {
-  //   texelData2.push.apply(texelData2, value2);
-  // }
-  // //width = 2000;
-  // //height = 2000;
-  // // bind texture
-  // gl.bindTexture(gl.TEXTURE_2D, texture2);
-  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
-  //     gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(texelData2));
-  // // set texture's render settings
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   var texture = setupTexture(width, height);
   var textureSta = setupTexture(width, height);
 
-  const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
-  const squareVBO = VBO.createQuad(gl, -.5, -.5, +.5, +.5);
+  // const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
+  // const squareVBO = VBO.createQuad(gl, -.5, -.5, +.5, +.5);
   let _FBO = FBO.create(gl, width, height);
 
   obstacleShader.setDimensions( width, height);
@@ -422,14 +360,13 @@ function main() {
   gl.enable(gl.BLEND);
 
   function addObstacle(posx:number, posy: number) {
-
     addObstacleAddShader.setObsPos(vec2.fromValues(posx, 1.0 - posy), camera);
     _FBO.bind(gl, textureSta, null);
     gl.useProgram(addObstacleAddShader.prog);
-    gl.enableVertexAttribArray(addObstacleAddShader.attrCorner);
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVBO.data);
-    gl.vertexAttribPointer(addObstacleAddShader.attrCorner, 2, gl.FLOAT, squareVBO.normalize || false,
-        squareVBO.stride || false, squareVBO.offset || false);
+    // gl.enableVertexAttribArray(addObstacleAddShader.attrCorner);
+    // gl.bindBuffer(gl.ARRAY_BUFFER, squareVBO.data);
+    // gl.vertexAttribPointer(addObstacleAddShader.attrCorner, 2, gl.FLOAT, squareVBO.normalize || false,
+    //     squareVBO.stride || false, squareVBO.offset || false);
 
     renderer.render(camera, addObstacleAddShader, [screenQuad2]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
@@ -441,24 +378,23 @@ function main() {
     gl.useProgram(addObstacleAdd2Shader.prog);
     _FBO.bind(gl, texture, null);
     // bind
-    //gl.uniform1i(addObstacleAdd2Shader.unifObstacleTexture, 1);
+   // gl.uniform1i(addObstacleAdd2Shader.unifObstacleTexture, 1);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textureSta);
-    gl.enableVertexAttribArray(addObstacleAdd2Shader.attrCorner);
-    gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
-    gl.vertexAttribPointer(addObstacleAdd2Shader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
-        cornersVBO.stride || false, cornersVBO.offset || false);
+   // gl.enableVertexAttribArray(addObstacleAdd2Shader.attrCorner);
+   // gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
+   //  gl.vertexAttribPointer(addObstacleAdd2Shader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
+   //      cornersVBO.stride || false, cornersVBO.offset || false);
     renderer.render(camera, addObstacleAdd2Shader, [screenQuad]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
-  addObstacle(0.5, 0.5);
-  addObstacle(0.2, 0.4);
-  addObstacle(0.9, 0.5);
-
-
+  for (let i = 0; i < obstacles.length; i++) {
+    console.log('hi');
+    addObstacle(obstacles[i][0], obstacles[i][1]);
+  }
 
 
   var leftButton = 0;
@@ -470,6 +406,7 @@ function main() {
       //transformFeedbackShader.setIsAttractToPoint(1.0);
       // add obstacle
       // use obstacleAdd shader to add information
+
     }
     transformFeedbackShader.setObsPos(vec2.fromValues((2.0 * ev.clientX / window.innerWidth) - 1.0,
         1.0 - (2.0 * ev.clientY / window.innerHeight)), camera);
@@ -477,8 +414,21 @@ function main() {
     isMouseDragging = true;
   };
 
+
+
+  let posx: number;
+  let posy: number;
+  let context = this;
   canvas.onmouseup = function(ev){ //Mouse is released
-    transformFeedbackShader.setIsAttractToPoint(0);
+    if(ev.button === rightButton) {
+      posx = 0.2
+      posy = 0.2;
+      console.log('on mouse right click!');
+      obstacles.push(vec2.fromValues(0.6, 0.6));
+      //addObstacle((2.0 * ev.clientX / window.innerWidth) - 1.0, (2.0 * ev.clientY / window.innerWidth) - 1.0);
+      add = true;
+
+    }
     isMouseDragging = false;
   }
 
@@ -487,9 +437,16 @@ function main() {
       console.log('on mouse move!');
     }
   }
+
   // Start the render loop
 
   tick();
 }
+
+let obstacles: Array<vec2>;
+obstacles = new Array<vec2>();
+obstacles.push(vec2.fromValues(0.2, 0.3));
+obstacles.push(vec2.fromValues(0.8, 0.3));
+obstacles.push(vec2.fromValues(0.5, 0.4));
 
 main();

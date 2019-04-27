@@ -5,6 +5,7 @@ uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_Dimensions;
 uniform float u_Time;
 uniform sampler2D u_ObstacleBuffer;
+uniform float u_ShowObs;
 
 
 in vec4 fs_Pos;
@@ -23,6 +24,11 @@ void main() {
           if (dot(normal, normal) < 0.1)
              discard;
 
-          //out_Col = vec4(1.0, 1.0, 1.0, 1.0);
-          out_Col =vec4(texel.rg, 0, 1);
+        if (u_ShowObs == 1.0) {
+            out_Col =vec4(texel.rg, 0, 1.8);
+           out_Col = vec4(vec3(0.32, 0.4, 0.8), 1.0);
+
+        } else {
+            discard;
+        }
 }

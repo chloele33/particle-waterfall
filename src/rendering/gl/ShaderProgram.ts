@@ -59,7 +59,7 @@ class ShaderProgram {
   unifObstacleBuf: WebGLUniformLocation;
   unifObstacleTexture: WebGLUniformLocation;
   unifObstacleSize: WebGLUniformLocation;
-
+  unifShowObs: WebGLUniformLocation;
 
 
 
@@ -112,7 +112,7 @@ class ShaderProgram {
     this.unifObstacleBuf = gl.getUniformLocation(this.prog, "u_ObstacleBuffer")
     this.unifObstacleTexture = gl.getUniformLocation(this.prog, "u_Texture");
 this.unifObstacleSize = gl.getUniformLocation(this.prog, "u_ObstacleSize");
-
+  this.unifShowObs = gl.getUniformLocation(this.prog, "u_ShowObs");
 
   }
 
@@ -183,6 +183,12 @@ this.unifObstacleSize = gl.getUniformLocation(this.prog, "u_ObstacleSize");
     this.use();
     if (this.unifObstacleSize !== -1) {
       gl.uniform1f(this.unifObstacleSize, t);
+    }
+  }
+  setShowObstacles(checked: number) {
+    this.use();
+    if (this.unifShowObs !== -1) {
+      gl.uniform1f(this.unifShowObs, checked);
     }
   }
 

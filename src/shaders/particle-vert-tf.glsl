@@ -120,14 +120,14 @@ void main()
             vec4 tex = texture(u_ObstacleBuffer, position_next);
             vec2 obstacleNormal = 2.0 * tex.rg - 1.0;
             if (length(obstacleNormal) > 0.1) {
-                 if (length(vel) < 0.5) {
+                 if (length(vel) < 5.0) {
                     vel.xy = obstacleNormal * 0.5;
-
+                    v_col = vec3(1.0);
                  } else {
                 //if (dot(vel.xy, obstacleNormal) > 0.0) {
                     vel = reflect(vec3(-vel.x, vel.y, vel.z), vec3(obstacleNormal,0.0)) * 2.0;
                     vel *= min(1.0, 0.5*  MAX_SPEED/length(vel));
-                     v_col = vec3(1.0);
+                    v_col = vec3(1.0);
                 }
             }
             vel *= min(1.0,  MAX_SPEED / length(vel));
@@ -150,7 +150,7 @@ void main()
 
             }
             nextPos.y += 10.0* deltaTime * obstacleNormal.y;
-           // nextPos.x -= 10.0* deltaTime * obstacleNormal.x;
+            nextPos.x -= 10.0* deltaTime * obstacleNormal.x;
             v_pos = nextPos;
 
 
