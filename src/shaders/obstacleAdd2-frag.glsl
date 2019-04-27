@@ -4,6 +4,8 @@ precision highp float;
 uniform vec3 u_Eye, u_Ref, u_Up;
 uniform vec2 u_Dimensions;
 uniform float u_Time;
+uniform float u_ObstacleSize;
+
 
 uniform vec2 u_ObstaclePos;
 uniform sampler2D u_Texture;
@@ -18,7 +20,7 @@ out vec4 out_Col;
 
 void main() {
     //vec2 uv = vec2(0.5 * (fs_Pos.x + 1.0), 0.5 * (fs_Pos.y + 1.0));
-    vec2 size = vec2(100.0 / u_Dimensions.x, 100.0 / u_Dimensions.y);
+    vec2 size = vec2(u_ObstacleSize / u_Dimensions.x, u_ObstacleSize / u_Dimensions.y);
         vec2 fromCenter = 2.0 * (sampleCoords - u_ObstaclePos) / size;
         // out_Col = vec4(0.0 * (vec3(0.0) + vec3(1.0)),0.0);
          if (dot(fromCenter, fromCenter) < 1.0) {

@@ -417,7 +417,8 @@ function main() {
   addObstacleAddShader.setDimensions(width, height);
   addObstacleAdd2Shader.setDimensions( width, height);
 
-
+  addObstacleAdd2Shader.setObstacleSize(160.0);
+  addObstacleAddShader.setObstacleSize(160.0);
   gl.enable(gl.BLEND);
 
   function addObstacle(posx:number, posy: number) {

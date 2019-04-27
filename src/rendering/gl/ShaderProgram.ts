@@ -58,7 +58,7 @@ class ShaderProgram {
 
   unifObstacleBuf: WebGLUniformLocation;
   unifObstacleTexture: WebGLUniformLocation;
-
+  unifObstacleSize: WebGLUniformLocation;
 
 
 
@@ -111,7 +111,7 @@ class ShaderProgram {
     this.unifObstaclePos = gl.getUniformLocation(this.prog, "u_ObstaclePos");
     this.unifObstacleBuf = gl.getUniformLocation(this.prog, "u_ObstacleBuffer")
     this.unifObstacleTexture = gl.getUniformLocation(this.prog, "u_Texture");
-
+this.unifObstacleSize = gl.getUniformLocation(this.prog, "u_ObstacleSize");
 
 
   }
@@ -179,6 +179,12 @@ class ShaderProgram {
     }
   }
 
+  setObstacleSize(t: number) {
+    this.use();
+    if (this.unifObstacleSize !== -1) {
+      gl.uniform1f(this.unifObstacleSize, t);
+    }
+  }
 
 
   // Transform Feedback
