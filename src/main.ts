@@ -32,6 +32,7 @@ let screenQuad: ScreenQuad;
 let time: number = 0.0;
 let obsMesh: Mesh;
 let cube: Cube;
+let screenQuad2: ScreenQuad;
 let sphere: Sphere;
 let textureData: Uint8Array;
 
@@ -42,8 +43,10 @@ function loadScene() {
   cube = new Cube(vec3.fromValues(20.0, 0.0, 0.0), 5);
   cube.create();
   cube.setNumInstances(1);
-  screenQuad = new ScreenQuad();
+  screenQuad = new ScreenQuad(0, 0, 1, 1);
   screenQuad.create();
+  screenQuad2 = new ScreenQuad(-.5, -.5, +.5, +.5);
+  screenQuad2.create();
   // sphere = new Sphere(vec3.fromValues(0.0, 0.0, 0.0), 10, 2);
   // sphere.create();
 
@@ -129,7 +132,13 @@ function main() {
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
-  gl.enable(gl.BLEND);
+  gl.canvas.width = canvas.clientWidth;
+  gl.canvas.height = canvas.clientHeight;
+ // gl.enable(gl.BLEND);
+  gl.disable(gl.CULL_FACE);
+  gl.disable(gl.DEPTH_TEST);
+  gl.disable(gl.BLEND);
+  gl.clearColor(0.2, 0.2, 0.2, 1.0);
   gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
 
   const lambertShader = new ShaderProgram([
@@ -155,12 +164,17 @@ function main() {
   const obstacleShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/obstacle-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/obstacle-frag.glsl')),
-  ], true, ["sampleCoords"]);
+  ], false, ["sampleCoords"]);
 
   const addObstacleAddShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/obstacleAdd-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/obstacleAdd-frag.glsl')),
-  ], true, ["fromCenter"]);
+  ], false, ["fromCenter"]);
+
+  const addObstacleAdd2Shader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/obstacleAdd2-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/obstacleAdd2-frag.glsl')),
+  ], false, ["sampleCoords"]);
 
 
   var particleShader = new ShaderProgram([
@@ -197,6 +211,23 @@ function main() {
   }
   setParticleAcceleration();
 
+  function setupTexture(width: number, height: number) {
+      let texelData : any= [];
+      let value = [127, 127, 0, 0]
+      for (let i = 0 ; i < width * height ; ++i) {
+        texelData.push.apply(texelData, value);
+      }
+
+      let texture = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
+          gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(texelData));
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return texture;
+  }
 
 
   // This function will be called every frame
@@ -209,27 +240,55 @@ function main() {
     flat.setTime(time++);
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
 
+
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+// bind
+   // gl.uniform1i(obstacleShader.unifObstacleBuf, 0);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texture);
+    //
+  //  gl.uniform1i(obstacleShader.unifObstacleBuf, 1);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
 
-    //transform feedback
-    renderer.transformParticles(camera, transformFeedbackShader, [
-      particles
-    ]);
+
+
+
+
 
 
 
     // renderer.render(camera, lambertShader, [
     //   obsMesh
     // ]);
+
     renderer.clear();
-    renderer.render(camera, flat, [cube]);
+    //renderer.render(camera, flat, [cube]);
+
+
+
+
+    //renderer.render(camera, addObstacleAdd2Shader, [screenQuad]);
+    //renderer.render(camera, addObstacleAddShader, [screenQuad2]);
+    gl.enableVertexAttribArray(obstacleShader.attrCorner);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
+    gl.vertexAttribPointer(obstacleShader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
+        cornersVBO.stride || false, cornersVBO.offset || false);
+    gl.disable(gl.BLEND);
+
+    renderer.render(camera, obstacleShader, [screenQuad]);
+    //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.enable(gl.BLEND);
+    //transform feedback
+    renderer.transformParticles(camera, transformFeedbackShader, [
+      particles
+    ]);
 
 
     renderer.renderParticleCollection(camera, particleShader, square, [particles]);
-    renderer.render(camera, obstacleShader, [screenQuad]);
 
 
     stats.end();
@@ -239,48 +298,14 @@ function main() {
   }
 
 
-  // -------------------for initializing texture --------------------
-  var tex_frameBuffer = gl.createFramebuffer();
-  var tex_renderBuffer = gl.createRenderbuffer();
-  var texture = gl.createTexture();
-  var width = window.innerWidth;
-  var height = window.innerHeight;
-  let texelData : any  = [];
-  let value = [127, 127, 0, 0]
-  for (let i = 0 ; i < width * height ; ++i) {
-    texelData.push.apply(texelData, value);
-  }
-  //width = 2000;
-  //height = 2000;
-  // bind texture
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(texelData));
-  // set texture's render settings
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 
-
-  const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
-  let _FBO = FBO.create(gl, width, height);
-
-
-  addObstacleAddShader.setObsPos(vec2.fromValues(0.0, 0.0), camera);
-  _FBO.bind(gl, texture, null);
-
-  renderer.render(camera, addObstacleAddShader, [screenQuad]);
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  // save texture date
-  gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  var texturePixels = new Uint8Array(width * height * 4);
-  gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texturePixels);
-  textureData = texturePixels;
+  // // save texture date
+  // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
+  // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+  // var texturePixels = new Uint8Array(width * height * 4);
+  // gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, texturePixels);
+  // textureData = texturePixels;
   //
   // // bind frame buffer
   // gl.bindFramebuffer(gl.FRAMEBUFFER, tex_frameBuffer);
@@ -316,6 +341,10 @@ function main() {
     camera.setAspectRatio(window.innerWidth / window.innerHeight);
     camera.updateProjectionMatrix();
     flat.setDimensions(window.innerWidth, window.innerHeight);
+    addObstacleAdd2Shader.setDimensions(window.innerWidth, window.innerHeight);
+    addObstacleAddShader.setDimensions(window.innerWidth, window.innerHeight);
+    obstacleShader.setDimensions(window.innerWidth, window.innerHeight);
+
     transformFeedbackShader.setDimensions(window.innerWidth, window.innerHeight);
   }, false);
 
@@ -326,6 +355,109 @@ function main() {
   camera.updateProjectionMatrix();
   flat.setDimensions(window.innerWidth, window.innerHeight);
   transformFeedbackShader.setDimensions(window.innerWidth, window.innerHeight);
+
+  // -------------------for initializing texture --------------------
+  gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  width = gl.drawingBufferWidth;
+  height = gl.drawingBufferHeight;
+  // var tex_frameBuffer = gl.createFramebuffer();
+  // var tex_renderBuffer = gl.createRenderbuffer();
+
+  // intialize textures
+  // var texture = gl.createTexture(); // texture
+  // let texelData : any  = [];
+  // let value = [127, 127, 0, 0]
+  // for (let i = 0 ; i < width * height ; ++i) {
+  //   texelData.push.apply(texelData, value);
+  // }
+  // //width = 2000;
+  // //height = 2000;
+  // // bind texture
+  // gl.bindTexture(gl.TEXTURE_2D, texture);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA,
+  //     gl.UNSIGNED_BYTE, new Uint8Array(texelData));
+  // // set texture's render settings
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  //
+  //
+  // var texture2 = gl.createTexture(); //texture static
+  // let texelData2 : any  = [];
+  // let value2 = [127, 127, 0, 0]
+  // for (let i = 0 ; i < width * height ; ++i) {
+  //   texelData2.push.apply(texelData2, value2);
+  // }
+  // //width = 2000;
+  // //height = 2000;
+  // // bind texture
+  // gl.bindTexture(gl.TEXTURE_2D, texture2);
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0,
+  //     gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(texelData2));
+  // // set texture's render settings
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  var texture = setupTexture(width, height);
+  var textureSta = setupTexture(width, height);
+
+  const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
+  const squareVBO = VBO.createQuad(gl, -.5, -.5, +.5, +.5);
+  let _FBO = FBO.create(gl, width, height);
+
+  obstacleShader.setDimensions( width, height);
+  addObstacleAddShader.setDimensions(width, height);
+  addObstacleAdd2Shader.setDimensions( width, height);
+
+
+  gl.enable(gl.BLEND);
+
+  function addObstacle(posx:number, posy: number) {
+
+    addObstacleAddShader.setObsPos(vec2.fromValues(posx, 1.0 - posy), camera);
+    _FBO.bind(gl, textureSta, null);
+    gl.useProgram(addObstacleAddShader.prog);
+    gl.enableVertexAttribArray(addObstacleAddShader.attrCorner);
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVBO.data);
+    gl.vertexAttribPointer(addObstacleAddShader.attrCorner, 2, gl.FLOAT, squareVBO.normalize || false,
+        squareVBO.stride || false, squareVBO.offset || false);
+
+    renderer.render(camera, addObstacleAddShader, [screenQuad2]);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+
+    addObstacleAdd2Shader.setObsPos(vec2.fromValues(posx, 1.0 - posy), camera);
+    gl.useProgram(addObstacleAdd2Shader.prog);
+    _FBO.bind(gl, texture, null);
+    // bind
+    //gl.uniform1i(addObstacleAdd2Shader.unifObstacleTexture, 1);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, textureSta);
+    gl.enableVertexAttribArray(addObstacleAdd2Shader.attrCorner);
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornersVBO.data);
+    gl.vertexAttribPointer(addObstacleAdd2Shader.attrCorner, 2, gl.FLOAT, cornersVBO.normalize || false,
+        cornersVBO.stride || false, cornersVBO.offset || false);
+    renderer.render(camera, addObstacleAdd2Shader, [screenQuad]);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  addObstacle(0.5, 0.5);
+  addObstacle(0.2, 0.4);
+  addObstacle(0.9, 0.5);
+
+
 
 
   var leftButton = 0;
@@ -355,6 +487,7 @@ function main() {
     }
   }
   // Start the render loop
+
   tick();
 }
 

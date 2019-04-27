@@ -28,6 +28,7 @@ class ShaderProgram {
   attrCol: number; // This time, it's an instanced rendering attribute, so each particle can have a unique color. Not per-vertex, but per-instance.
   attrTranslate: number; // Used in the vertex shader during instanced rendering to offset the vertex positions to the particle's drawn position.
   attrUV: number;
+  attrCorner: number;
 
 
   // for instanced rendering
@@ -53,9 +54,10 @@ class ShaderProgram {
 
   unifSampler2D: WebGLUniformLocation;
   unifIsAttractToPoint: WebGLUniformLocation;
-  unifAttractPos: WebGLUniformLocation;
+  unifObstaclePos: WebGLUniformLocation;
 
   unifObstacleBuf: WebGLUniformLocation;
+  unifObstacleTexture: WebGLUniformLocation;
 
 
 
@@ -81,6 +83,8 @@ class ShaderProgram {
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
     this.attrTranslate = gl.getAttribLocation(this.prog, "vs_Translate");
     this.attrUV = gl.getAttribLocation(this.prog, "vs_UV");
+    this.attrCorner = gl.getAttribLocation(this.prog, "a_Corner");
+
     this.unifModel   = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj   = gl.getUniformLocation(this.prog, "u_ViewProj");
@@ -100,10 +104,13 @@ class ShaderProgram {
     this.attrTransformCol2 = gl.getAttribLocation(this.prog, "vs_Transform2");
     this.attrTransformCol3 = gl.getAttribLocation(this.prog, "vs_Transform3");
     this.attrTransformCol4 = gl.getAttribLocation(this.prog, "vs_Transform4");
+    this.unifDimensions = gl.getUniformLocation(this.prog, "u_Dimensions");
+
 
     this.unifIsAttractToPoint = gl.getUniformLocation(this.prog, "u_IsAttract");
-    this.unifAttractPos = gl.getUniformLocation(this.prog, "u_ObstaclePos");
+    this.unifObstaclePos = gl.getUniformLocation(this.prog, "u_ObstaclePos");
     this.unifObstacleBuf = gl.getUniformLocation(this.prog, "u_ObstacleBuffer")
+    this.unifObstacleTexture = gl.getUniformLocation(this.prog, "u_Texture");
 
 
 
@@ -133,7 +140,7 @@ class ShaderProgram {
   setDimensions(width: number, height: number) {
     this.use();
     if(this.unifDimensions !== -1) {
-      gl.uniform2f(this.unifDimensions, width, height);
+      gl.uniform2fv(this.unifDimensions, vec2.fromValues(width, height));
     }
   }
 
@@ -171,6 +178,7 @@ class ShaderProgram {
       gl.uniform1f(this.unifTime, t);
     }
   }
+
 
 
   // Transform Feedback
@@ -212,7 +220,7 @@ class ShaderProgram {
 
   setObsPos(ndcPos: vec2, cam: Camera){
     this.use();
-    if(this.unifAttractPos !== -1){
+    if(this.unifObstaclePos !== -1){
       let len_vec = vec3.create();
       vec3.subtract(len_vec, cam.target, cam.position);
       let len = 1.35 * vec3.length(len_vec);
@@ -231,10 +239,15 @@ class ShaderProgram {
           cam.target[1] + ndcPos[0] * h[1] + ndcPos[1] * v[1],
           cam.target[2] + ndcPos[0] * h[2] + ndcPos[1] * v[2]);
 
-      gl.uniform3fv(this.unifAttractPos, world_pos);
+      gl.uniform2fv(this.unifObstaclePos, ndcPos);
     }
   }
 
+  // setTexture() {
+  //   this.use();
+  //
+  //
+  // }
 
 
   drawParticles(d: Drawable, numInstances: number) {
@@ -326,7 +339,7 @@ class ShaderProgram {
       gl.vertexAttribDivisor(this.attrUV, 0); // Advance 1 index in pos VBO for each vertex
     }
 
-    // TODO: Set up attribute data for additional instanced rendering data as needed
+
     // TODO: Set up attribute data for additional instanced rendering data as needed
     if (this.attrTransformCol1 != -1 && d.bindTransformCol1()) {
       gl.enableVertexAttribArray(this.attrTransformCol1);
@@ -371,6 +384,8 @@ class ShaderProgram {
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
     if (this.attrTranslate != -1) gl.disableVertexAttribArray(this.attrTranslate);
     if (this.attrUV != -1) gl.disableVertexAttribArray(this.attrUV);
+    if (this.attrCorner != -1) gl.disableVertexAttribArray(this.attrCorner);
+
 
     // for instanced rendering
     if (this.attrTransformCol1 != -1) gl.disableVertexAttribArray(this.attrTransformCol1);
@@ -378,7 +393,10 @@ class ShaderProgram {
     if (this.attrTransformCol3 != -1) gl.disableVertexAttribArray(this.attrTransformCol3);
     if (this.attrTransformCol4 != -1) gl.disableVertexAttribArray(this.attrTransformCol4);
 
-    gl.uniform1i(this.unifSampler2D, 0);
+    // gl.uniform1i(this.unifSampler2D, 0);
+    // gl.uniform1i(this.unifObstacleBuf, 1);
+    // gl.uniform1i(this.unifObstacleTexture,2);
+
   }
 };
 

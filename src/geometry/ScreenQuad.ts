@@ -5,19 +5,27 @@ import {gl} from '../globals';
 class ScreenQuad extends Drawable {
   indices: Uint32Array;
   positions: Float32Array;
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
 
-  constructor() {
+  constructor(minX:number, minY:number, maxX:number, maxY:number) {
     super();
+    this.maxX = maxX;
+    this.maxY = maxY;
+    this.minX = minX;
+    this.minY = minY;
   }
 
   create() {
 
   this.indices = new Uint32Array([0, 1, 2,
                                   0, 2, 3]);
-  this.positions = new Float32Array([-1, -1, 0.999, 1,
-                                     1, -1, 0.999, 1,
-                                     1, 1, 0.999, 1,
-                                     -1, 1, 0.999, 1]);
+  this.positions = new Float32Array([this.minX, this.minY, 0.0, 1,
+    this.maxX, this.minY, 0.0, 1,
+    this.maxX, this.maxY, 0.0, 1,
+    this.minX, this.maxY, 0.0, 1]);
 
     this.generateIdx();
     this.generatePos();

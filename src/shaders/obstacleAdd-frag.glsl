@@ -14,7 +14,7 @@ out vec4 out_Col;
 
 void main() {
  // out_Col = vec4(0.0 * (vec3(0.0) + vec3(1.0)),0.0);
- if (dot(fromCenter, fromCenter) > 1.0) {
+            if (dot(fromCenter, fromCenter) < 2.0) {
                discard;
            }
 
