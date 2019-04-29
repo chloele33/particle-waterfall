@@ -153,14 +153,14 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, -100.0), vec3.fromValues(0.0, -10, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.1, 0.1, 0.1, 1);
   gl.canvas.width = canvas.clientWidth;
   gl.canvas.height = canvas.clientHeight;
  // gl.enable(gl.BLEND);
   gl.disable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);
-  gl.clearColor(0.2, 0.2, 0.2, 1.0);
+  gl.clearColor(0.1, 0.1, 0.1, 1.0);
   gl.blendFunc(gl.ONE, gl.ONE); // Additive blending
 
   const lambertShader = new ShaderProgram([
