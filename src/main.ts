@@ -24,9 +24,10 @@ const controls = {
   'G': 72,
   'B':255.0,
   'Particle Size': 0.5,
+  'Obstacle Size': 20.0,
+  'Gravity': 30.0,
   'Show Obstacles': true,
-  'Lock Camera': true
-
+  'Lock Camera': true,
 };
 
 let square: Square;
@@ -76,7 +77,7 @@ function loadScene() {
 
 
   //set up particles
-  particles = new ParticleCollection(25000);
+  particles = new ParticleCollection(30000);
   particles.create();
   particles.setVBOs();
 
@@ -123,8 +124,17 @@ function main() {
   gui.add(controls, 'G', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'B', 0, 255.0).step(1.0).onChange(setParticleColor);
   gui.add(controls, 'Particle Size', 0.1, 1.0).step(0.1).onChange(setParticleSize);
+  gui.add(controls, 'Obstacle Size', 5.0, 200.0).step(1.0).onChange(setObstacleSize);
+  gui.add(controls, 'Gravity', 1.0, 100.0).step(1.0).onChange(setParticleAcceleration);
   gui.add(controls, 'Show Obstacles').onChange(setShowObstacles);
   gui.add(controls, 'Lock Camera').onChange(setCamera);
+  // var button = { undo:function(){
+  //   console.log("clicked");
+  //   obstacles[obstacles.length-1] = null;
+  //   console.log(obstacles[obstacles.length-1]);
+  //   add = true;
+  // }};
+  // gui.add(button,'undo');
 
 
   // get canvas and webgl context
@@ -140,7 +150,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 5, -90.0), vec3.fromValues(0.0, -10, 0));
+  const camera = new Camera(vec3.fromValues(0, 0, -100.0), vec3.fromValues(0.0, -10, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
@@ -217,6 +227,13 @@ function main() {
   }
   setParticleSize();
 
+  function setObstacleSize() {
+    addObstacleAdd2Shader.setObstacleSize(controls["Obstacle Size"]);
+    addObstacleAddShader.setObstacleSize(controls["Obstacle Size"]);
+  }
+
+  setObstacleSize();
+
   function setShowObstacles() {
     if(controls["Show Obstacles"] == true) {
       obstacleShader.setShowObstacles(1.0);
@@ -236,7 +253,7 @@ function main() {
 
 
   function setParticleAcceleration() {
-    transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, 30.0,0.0));
+    transformFeedbackShader.setTransformAcc(vec3.fromValues(0.0, controls.Gravity,0.0));
   }
   setParticleAcceleration();
 
@@ -265,12 +282,20 @@ function main() {
     //   console.log(obstacles.length);
     //   addObstacle(obstacles[i][0], obstacles[i][1]);
     // }
+    // if (add) {
+    //   add = false;
+    //   for (let i = 0; i < obstacles.length; i++) {
+    //     if (obstacles[i]) {
+    //       addObstacle(obstacles[i][0], obstacles[i][1]);
+    //     }
+    //   }
+    // }
     if (!lockCam ) {
 
       camera.update();
 
     } else {
-      camera.reset(vec3.fromValues(0, 5, -90.0), vec3.fromValues(0.0, -10, 0));
+      camera.reset(vec3.fromValues(0, 0, -100.0), vec3.fromValues(0.0, -10, 0));
       camera.update();
 
     }
@@ -379,8 +404,7 @@ function main() {
   addObstacleAddShader.setDimensions(width, height);
   addObstacleAdd2Shader.setDimensions( width, height);
 
-  addObstacleAdd2Shader.setObstacleSize(20.0);
-  addObstacleAddShader.setObstacleSize(20.0);
+
   gl.enable(gl.BLEND);
 
   function addObstacle(posx:number, posy: number) {
@@ -427,11 +451,13 @@ function main() {
       //transformFeedbackShader.setIsAttractToPoint(1.0);
       // add obstacle
       // use obstacleAdd shader to add information
-      //if (isMouseDragging) {
+      if (isMouseDragging) {
         addObstacle(ev.clientX / window.innerWidth,
             ( ev.clientY / window.innerHeight));
-      //}
-
+      }
+      // obstacles.push(vec2.fromValues(ev.clientX / window.innerWidth,
+      //     ev.clientY / window.innerHeight));
+      // add = true;
     }
     transformFeedbackShader.setObsPos(vec2.fromValues((2.0 * ev.clientX / window.innerWidth) - 1.0,
         1.0 - (2.0 * ev.clientY / window.innerHeight)), camera);
@@ -452,11 +478,12 @@ function main() {
       console.log('on mouse right click!');
       obstacles.push(vec2.fromValues(ev.clientX / window.innerWidth,
           ( ev.clientY / window.innerHeight)));
-      addObstacle(ev.clientX / window.innerWidth,
-          ( ev.clientY / window.innerHeight));
-
+      // addObstacle(ev.clientX / window.innerWidth,
+      //     ( ev.clientY / window.innerHeight));
+      // obstacles.push(vec2.fromValues(ev.clientX / window.innerWidth,
+      //     ev.clientY / window.innerHeight));
       //addObstacle((2.0 * ev.clientX / window.innerWidth) - 1.0, (1. - 2.0 * ev.clientY / window.innerWidth) - 1.0);
-      //add = true;
+//      add = true;
 
     }
     isMouseDragging = false;
@@ -467,7 +494,9 @@ function main() {
       console.log('on mouse move!');
       addObstacle(ev.clientX / window.innerWidth,
           ( ev.clientY / window.innerHeight));
-
+      // obstacles.push(vec2.fromValues(ev.clientX / window.innerWidth,
+      //       ev.clientY / window.innerHeight));
+      // add = true;
     }
   }
 
@@ -479,8 +508,8 @@ function main() {
 
 let obstacles: Array<vec2>;
 obstacles = new Array<vec2>();
-obstacles.push(vec2.fromValues(0.2, 0.3));
-obstacles.push(vec2.fromValues(0.8, 0.3));
-obstacles.push(vec2.fromValues(0.5, 0.4));
+// obstacles.push(vec2.fromValues(0.2, 0.3));
+// obstacles.push(vec2.fromValues(0.8, 0.3));
+obstacles.push(vec2.fromValues(0.5, 0.5));
 
 main();

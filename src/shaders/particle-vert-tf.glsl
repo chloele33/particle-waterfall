@@ -59,12 +59,12 @@ vec2 random2( vec2 p , vec2 seed) {
 vec3 getParticlePos(float spaceSize){
     vec3 position = vec3(random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize * 2.0 - spaceSize,
                     random1(vec2(a_ID, 2.5 * a_ID), vec2(0.0, 0.0)) * spaceSize - spaceSize/2.0,
-                    random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize /4.0 - spaceSize/8.0);
+                    random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize/2.0  - spaceSize/4.0);
 
     return position;
 }
 
-const float MAX_SPEED = 60.0;
+const float MAX_SPEED = 80.0;
 
 void main()
 {
@@ -79,10 +79,12 @@ void main()
 //    gl_Position = u_ViewProj * vec4(billboardPos, 1.0);
 //    v_col = u_ParticleColor;
 
-        float spaceSize = 80.0;
+        float spaceSize = 100.0;
         float distToCenter = length(a_position);
         vec3 nextVel = vec3(0.0);
         vec3 nextPos = vec3(0.0);
+
+
         // a new particle
         if(a_time.x == 0.0){
             v_pos = getParticlePos(spaceSize);
@@ -91,7 +93,13 @@ void main()
             v_vel = normalize(v_vel);
 
 
-            v_col = u_ParticleColor;
+            float e = 0.0 + length(v_vel) / 150.0;
+            float a = smoothstep(1.0 - 0.2, 1.0, length(v_pos.xy));
+            vec4 color1 = pow(mix(vec4(u_ParticleColor, 1.0), vec4(0, 0, 0, 0), a), vec4(e));
+
+            v_col = color1.rgb + (1.0 / pow((-(v_pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
+
+           // v_col = u_ParticleColor;
 
             v_time.x = u_Time;
             v_time.y = 1000.0;
@@ -101,7 +109,6 @@ void main()
             float deltaTime = 0.01;
             vec3 vel = a_velocity;
             vec3 pos = a_position;
-            v_col = u_ParticleColor + (1.0 / pow((-(pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
 
 
 //                 vec3 tmp = normalize(a_position);
@@ -109,6 +116,7 @@ void main()
 //                vel += vel + 0.7 * tmp;
 
             vel = a_velocity + deltaTime * u_Acceleration;
+
 
 
             if (pos.y < -spaceSize/2.0 ) {
@@ -119,6 +127,14 @@ void main()
             vec2 position_next = vec2(-pos.x/(spaceSize*2.0) + 0.5, pos.y/(spaceSize/1.0) + 0.6);
             vec4 tex = texture(u_ObstacleBuffer, position_next);
             vec2 obstacleNormal = 2.0 * tex.rg - 1.0;
+
+
+            float e = 0.0 + length(vel) / 150.0;
+            float a = smoothstep(1.0 - 0.2, 1.0, length(pos.xy) / spaceSize);
+            vec4 color1 = pow(mix(vec4(u_ParticleColor, 1.0), vec4(0, 0, 0, 0), a), vec4(e));
+            v_col = color1.rgb + (1.0 / pow((-(pos.y / 1.2) + spaceSize / 2.0) / 10.0, 5.0));
+
+
             if (length(obstacleNormal) > 0.1) {
                  if (length(vel) < 5.0) {
                     vel.xy = obstacleNormal * 0.5;
@@ -126,11 +142,11 @@ void main()
                  } else {
                 //if (dot(vel.xy, obstacleNormal) > 0.0) {
                     vel = reflect(vec3(-vel.x, vel.y, vel.z), vec3(obstacleNormal,0.0)) * 2.0;
-                    vel *= min(1.0, 0.5*  MAX_SPEED/length(vel));
+                    vel *= min(1.0, 0.4*  MAX_SPEED/length(vel));
                     v_col = vec3(1.0);
                 }
             }
-            vel *= min(1.0,  MAX_SPEED / length(vel));
+            vel *= min(1.0,  1.2 * MAX_SPEED / length(vel));
 
             v_vel = vel;
 
@@ -146,7 +162,7 @@ void main()
                  nextPos.x = (random1(pos + v_vel, vec3(0.0)) - 0.5) * spaceSize * 2.0;
                 // nextPos.x = random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize * 2.0 - spaceSize;
                  nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 1.0 - spaceSize);
-                 nextPos.z = random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize/ 4.0 - spaceSize/8.0;
+                 nextPos.z = random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize / 2.0 - spaceSize/4.0;
 
             }
             nextPos.y += 10.0* deltaTime * obstacleNormal.y;
