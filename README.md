@@ -22,6 +22,8 @@
 
 Particle animation is based on the paper [Particle Animation and Rendering Using Data Parallel Computation](https://www.karlsims.com/papers/ParticlesSiggraph90.pdf). 
 
+[Transform Feedback tutorial ](http://ogldev.atspace.co.uk/www/tutorial28/tutorial28.html)
+
 
 ## Inspiration
 This project is based on the paper [Particle Animation and Rendering Using Data Parallel Computation](https://www.karlsims.com/papers/ParticlesSiggraph90.pdf). 
@@ -40,13 +42,14 @@ It is especially inspired by the waterfall simulation mentioned in the paper's r
 ### Transform Feedback
 I set up the ParticleCollection class with WebGLTransformFeedback. 
 In creating the particle collection, I bind arrays for time, colors, velocity, and position. 
-These arrays are then bound to be the vertex shaders attributes.
+These arrays are then bound to be the Transform Feedback buffers (initialized with a size large enough for the desired number of particles).
 After setting up buffers for them, I am also calling gl.bindTransformFeedback at the end of setting the VBOs. 
 In the main function a shader for transform feedback is created with the vertex shader and frag shader(although frag is ignored in the case of TF).
 Every frame, the transform feedback shader is calling on a tranform function that takes in the Particle Collection class. 
 In the function, we are binding to gl's transform feedback and setting attribute per vertex's divisor to be 0.
 All particle update is done in the transform feedback vertex shader. Then rendered out using another vert and frag shader that just simply do basic instanced rendering.
 
+For more details regarding how I did Transform Feedback, I followed the tutorial linked in the Reference section.
 
 ### Particle Animation
 Particle animation is all done in the transform feedback shader for efficient computation.
