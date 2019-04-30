@@ -160,31 +160,4 @@ class ParticleCollection{
 }
 
 
-class Particles {
-    wsize :vec3;
-    constructor(gl:any, width: number, height :number) {
-        this.wsize = vec3.fromValues(gl.drawingBufferWidth, gl.drawingBufferHeight, 100.0);
-        //
-        // ParticlesShaders.setWorldSize(this._worldSize.width, this._worldSize.height);
-        // this._drawShader = ParticlesShaders.getDrawShader(gl);
-        // this._updatePosShader = ParticlesShaders.getUpdatePosShader(gl);
-        // this._updateVelShader = ParticlesShaders.getUpdateVelShader(gl);
-        //
-        // const cornersVBO = VBO.createQuad(gl, 0, 0, 1, 1);
-        // this._updatePosShader.a["aCorner"].VBO = cornersVBO;
-        // this._updateVelShader.a["aCorner"].VBO = cornersVBO;
-        //
-        // this._updateFBO = FBO.create(gl, width, height);
-        //
-        // const sampleCoordsVBO = Particles.initSampleCoordVBO(gl, width, height);
-        // this._drawShader.a["aSampleCoord"].VBO = sampleCoordsVBO;
-        //
-        // this._positionTextures = Particles.createRandomTextures(gl, width, height);
-        // this._velTextures = Particles.createRandomTextures(gl, width, height);
-        // this._currIndex = 0;
-        // this.acceleration = [0, -100];
-        // this.pointSize = 2;
-        // this.speed = 1;
-    }
-}
 export {Particle, ParticleCollection};

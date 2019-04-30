@@ -77,7 +77,8 @@ class OpenGLRenderer {
         var sourceVAO = particles[i].getVAO(this.currentSourceIdx);
         gl.bindVertexArray(sourceVAO);
 
-        // Attributes per-instance when drawing sets back to 1 when drawing instances
+        // Attributes per-instance when drawing
+        // 1 when drawing instances
         gl.vertexAttribDivisor(POSITION_LOCATION, 1);
         gl.vertexAttribDivisor(COLOR_LOCATION, 1);
 
