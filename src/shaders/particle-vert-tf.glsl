@@ -88,6 +88,11 @@ void main()
         // a new particle
         if(a_time.x == 0.0){
             v_pos = getParticlePos(spaceSize);
+            vec3 pos = a_position;
+            v_pos.x = (random1(pos + v_vel, vec3(0.0)) - 0.5) * spaceSize * 2.0;
+            // v_pos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 1.0 - spaceSize);
+
+            
 
             v_vel = vec3(random1(vec2(a_ID, 0.0), vec2(0.0, 0.0)) - 0.5, random1(vec2(a_ID, a_ID), vec2(0.0, 0.0)) - 0.5, random1(vec2(2.0 * a_ID, 2.0 * a_ID), vec2(0.0, 0.0)) - 0.5);
             v_vel = normalize(v_vel);
@@ -121,7 +126,7 @@ void main()
 
             if (pos.y < -spaceSize/2.0 ) {
                 vel.x = 0.1 * MAX_SPEED * (2.0 * random1(100.0 * pos, vec3(0.0)) - 1.0);
-                vel.y = random1(pos + a_velocity, vec3(0.0));
+                vel.y = MAX_SPEED * random1(pos + a_velocity, vec3(0.0));
             }
 
             vec2 position_next = vec2(-pos.x/(spaceSize*2.0) + 0.5, pos.y/(spaceSize/1.0) + 0.6);
@@ -161,7 +166,8 @@ void main()
             if (pos.y < -spaceSize/2.0 ) {
                  nextPos.x = (random1(pos + v_vel, vec3(0.0)) - 0.5) * spaceSize * 2.0;
                 // nextPos.x = random1(vec2(a_ID, 1.5 * a_ID), vec2(0.0, 0.0)) * spaceSize * 2.0 - spaceSize;
-                 nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize + 1.0 - spaceSize);
+                 nextPos.y += spaceSize + 0.5 * random1(v_pos, vec3(0.0)) * (spaceSize - spaceSize/2.0);
+                 //nextPos.y += (random1(v_pos, vec3(0.0)) - 0.5) * spaceSize;
                  nextPos.z = random1(vec2(a_ID, 0.5 * a_ID), vec2(0.0, 0.0)) * spaceSize / 2.0 - spaceSize/4.0;
 
             }
